@@ -1,21 +1,25 @@
 {
     "name": "NanoLeaf",
-    "docs": "https://github.com/therealmysteryman/udi-nanoleaf-polyglot",
+    "docs": "https://github.com/UniversalDevicesInc-PG3/udi-nanoleaf-polyglot",
     "type": "python3",
     "executable": "nanoleaf_poly.py",
     "install": "install.sh",
     "shortPoll": "90",
     "longPoll": "600",
     "description": "Connect Nanoleaf Aurora to the ISY994.",
-    "notice": "https://github.com/therealmysteryman/udi-nanoleaf-polyglot/blob/master/LICENSE",
+	"logLevel": "INFO",
+    "notice": "https://github.com/UniversalDevicesInc-PG3/udi-nanoleaf-polyglot/blob/master/LICENSE",
+	"customParams": {
+		"ip": ""
+	},
     "credits": [
         {
             "title": "nanoleaf-poly: A Polyglot v2 interface to NanoLeaf Aurora",
             "author": "AutomationGeek",
-            "version": "2.3.10",
-            "date": "January 28, 2021",
-            "source": "https://github.com/therealmysteryman/udi-nanoleaf-polyglot",
-            "license": "https://github.com/therealmysteryman/udi-nanoleaf-polyglot/blob/master/LICENSE"
+            "version": "3.0.0",
+            "date": "October 11, 2021",
+            "source": "https://github.com/UniversalDevicesInc-PG3/udi-nanoleaf-polyglot",
+            "license": "https://github.com/UniversalDevicesInc-PG3/udi-nanoleaf-polyglot/blob/master/LICENSE"
         },
 	{
             "title": "udi-poly-template-python: A Polyglot v2 Poly template",
@@ -33,5 +37,14 @@
             "source": "https://github.com/Oro/pynanoleaf/",
             "license": "https://github.com/Oro/pynanoleaf/blob/master/LICENSE"
         }
-    ]
+    ],
+	"store": {
+		"developer": "bpaauwe@bobsplace.com",
+		"purchaseOptions": [
+			{
+				"isPerpetual": true,
+				"price": 0
+			}
+		]
+	}
 }

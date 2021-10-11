@@ -1,20 +1,18 @@
-# Nanoleaf Polyglot V2 Node Server
+# Nanoleaf Polyglot V3 Node Server
 
 ![Build Status](https://travis-ci.org/therealmysteryman/udi-nanoleaf-polyglot.svg?branch=master)
 
-This Poly provides an interface between NanoLeaf Aurora and Polyglot v2 server. Support control of one Aurora Light per Node Server
+This Poly provides an interface between NanoLeaf Aurora and Polyglot v3 server. Support control of one Aurora Light per Node Server
 
 #### Installation
 
 Installation instructions
 You can install from Polyglot V2 store or manually :
 
-1. cd ~/.polyglot/nodeservers
-2. git clone https://github.com/therealmysteryman/udi-nanoleaf-polyglot.git
-3. run ./install.sh to install the required dependency.
-4. Create a custom variable named ip -> ipaddress_of_aurora or list of IP seperated by comma
-5. Before starting the Nanoleaf Node Server for the first time. Please make sure to have the Aurora in linking mode to generate the token. (holding the power button until the light flash) If you do have a token already then created a custom variable token -> token_string
-6. After the first run, I suggest you click on the Rebuild Profile of the Aurora and restart the Admin Console. This will provide you with and updated list of Effect for your Aurora. If you use more then one Aurora make sure your Effect List are the same. 
+1. Install the NanoLeaf node server from the store.
+2. Create a custom variable named ip -> ipaddress_of_aurora or list of IP seperated by comma
+3. Before starting the Nanoleaf Node Server for the first time. Please make sure to have the Aurora in linking mode to generate the token. (holding the power button until the light flash) If you do have a token already then created a custom variable token -> token_string
+4. After the first run, I suggest you click on the Rebuild Profile of the Aurora and restart the Admin Console. This will provide you with and updated list of Effect for your Aurora. If you use more then one Aurora make sure your Effect List are the same. 
 
 If you want to reset the token or the ip of the nanoleaf, add a custom variable requestNewToken -> 1, to force rebuild of the cache.
 

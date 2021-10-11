@@ -6,7 +6,7 @@ based on the NodeServer template for Polyglot v2 written in Python2/3 by Einstei
 Using this Python Library to control NanoLeaf by https://github.com/Oro/pynanoleaf
 """
 
-import polyinterface
+import udi_interface
 import time
 import json
 import sys
@@ -16,7 +16,8 @@ from copy import deepcopy
 from threading import Thread
 from pynanoleaf import Nanoleaf, Unavailable
 
-LOGGER = polyinterface.LOGGER
+LOGGER = udi_interface.LOGGER
+Custom = udi_interface.Custom
 SERVERDATA = json.load(open('server.json'))
 VERSION = SERVERDATA['credits'][0]['version']
 
@@ -31,95 +32,108 @@ def get_profile_info(logger):
     f.close()
     return { 'version': pv }
 
-class Controller(polyinterface.Controller):
+class Controller(udi_interface.Node):
 
-    def __init__(self, polyglot):
-        super(Controller, self).__init__(polyglot)
+    def __init__(self, polyglot, primary, address, name):
+        super(Controller, self).__init__(polyglot, primary, address, name)
         self.name = 'NanoLeaf'
         self.hb = 0
         self.queryON = False
         self.nano_ip = None
         self.nano_token = None
         self.discovery_thread = None
+
+        self.CustomData = Custom(polyglot, 'customdata')
+
+        polyglot.subscribe(polyglot.START, self.start, address)
+        polyglot.subscribe(polyglot.CUSTOMPARAMS, self.parameterHandler)
+        polyglot.subscribe(polyglot.POLL, self.poll)
+
+        polyglot.ready()
+        polyglot.addNode(self)
         
-    def start(self):
-        LOGGER.info('Started NanoLeaf Aurora for v2 NodeServer version %s', str(VERSION))
-        try:
-            
-            # Get and set IP
-            if 'ip' in self.polyConfig['customParams'] :
-                self.nano_ip = self.polyConfig['customParams']['ip']
-                LOGGER.info('Custom IP address specified: {}'.format(self.nano_ip))
-            else:
-                LOGGER.error('Need to have ip address in custom param ip')
-                self.setDriver('ST', 0, True)
-                return False
-            
-            # Get saved token
-            if 'nano_token' in self.polyConfig['customParams'] :
-                self.nano_token = self.polyConfig['customParams']['nano_token']
-                if self.nano_token  == ' ' :
-                    self.nano_token = None
-                LOGGER.debug('Retrieved token : {}'.format(self.nano_token))
-            
-            # If token is provided overwrite the saved token
-            if 'token' in self.polyConfig['customParams'] :
-                self.nano_token = self.polyConfig['customParams']['token']
-                self.saveCustomData({ 'nano_token': self.nano_token })
-                LOGGER.debug('Custom token specified: {}'.format(self.nano_token))
-                LOGGER.info('Saving token to the Database')
-            
-            # Reinitialize token only if token was not provided
-            if 'requestNewToken' in self.polyConfig['customParams'] and 'token' not in self.polyConfig['customParams'] :
+    def parameterHandler(self, params):
+        self.poly.Notices.clear()
+
+        # Get and set IP
+        if 'ip' in params and params['ip'] is not "":
+            self.nano_ip = params['ip']
+            LOGGER.info('Custom IP address specified: {}'.format(self.nano_ip))
+        else:
+            LOGGER.error('Need to have ip address in custom param ip')
+            self.setDriver('ST', 0, True)
+            return False
+          
+        # Get saved token
+        if 'nano_token' in self.CustomData:
+            self.nano_token = self.CustomData['nano_token']
+            if self.nano_token  == ' ' :
                 self.nano_token = None
-                self.saveCustomData({ 'nano_token': ' ' })
-                LOGGER.debug('Resetting token')
-                
-            # Obtain NanoLeaf token, make sure to push on the power button of Aurora until Light is Flashing
-            if self.nano_token is None :
-                LOGGER.debug('Requesting Token')
-                for myHost in self.nano_ip.split(','):
-                    nanoleaf = Nanoleaf(host=myHost)
-                    myToken = nanoleaf.request_token()
-                    if myToken is None:
-                        myToken = ' '
-                        LOGGER.error('Unable to obtain one of the token, make sure all NanoLeaf are in Linking mode.')
-                        
-                    if self.nano_token is None:
-                        self.nano_token = myToken
-                    else:
-                        self.nano_token = self.nano_token + ',' + myToken
+            LOGGER.debug('Retrieved token : {}'.format(self.nano_token))
             
-                self.saveCustomData({ 'nano_token': self.nano_token })
-                LOGGER.debug('Token received: {}'.format(self.nano_token))
-                LOGGER.info('Saving token to the Database')
-                        
+        # If token is provided overwrite the saved token
+        if 'token' in params:
+            self.nano_token = params['token']
+            self.CustomData['nano_token'] = self.nano_token
+            LOGGER.debug('Custom token specified: {}'.format(self.nano_token))
+            LOGGER.info('Saving token to the Database')
+            
+        # Reinitialize token only if token was not provided
+        if 'requestNewToken' in params and 'token' not in params :
+            self.nano_token = None
+            self.CustomData['nano_token'] = ' '
+            LOGGER.debug('Resetting token')
+                
+        # Obtain NanoLeaf token, make sure to push on the power button of Aurora until Light is Flashing
+        if self.nano_token is None :
+            LOGGER.debug('Requesting Token')
+            for myHost in self.nano_ip.split(','):
+                nanoleaf = Nanoleaf(host=myHost)
+                myToken = nanoleaf.request_token()
+                if myToken is None:
+                    myToken = ' '
+                    LOGGER.error('Unable to obtain one of the token, make sure all NanoLeaf are in Linking mode.')
+                       
+                if self.nano_token is None:
+                    self.nano_token = myToken
+                else:
+                    self.nano_token = self.nano_token + ',' + myToken
+          
+            self.CustomData['nano_token'] = self.nano_token
+            LOGGER.debug('Token received: {}'.format(self.nano_token))
+            LOGGER.info('Saving token to the Database')
+
+        self.discover()
+
+    def start(self):
+        LOGGER.info('Started NanoLeaf Aurora for v3 NodeServer version %s', str(VERSION))
+        try:
             self.setDriver('ST', 1)
-            self.discover()
-                                                            
+            self.poly.updateProfile()
+            self.poly.setCustomParamsDoc()
         except Exception as ex:
             LOGGER.error('Error starting NanoLeaf NodeServer: %s', str(ex))
             self.setDriver('ST', 0)
             return False
 
-    def shortPoll(self):
-        if self.discovery_thread is not None:
-            if self.discovery_thread.is_alive():
-                LOGGER.debug('Skipping shortPoll() while discovery in progress...')
-                return
-            else:
-                self.discovery_thread = None
+    def poll(self, polltype):
+        if 'shortPoll' in polltype:
+            if self.discovery_thread is not None:
+                if self.discovery_thread.is_alive():
+                    LOGGER.debug('Skipping shortPoll() while discovery in progress...')
+                    return
+                else:
+                    self.discovery_thread = None
         
-        for node in self.nodes:
-            if  self.nodes[node].queryON == True :
-                self.nodes[node].update()
-
-    def longPoll(self):
-        self.heartbeat()
+            for node in self.poly.nodes():
+                if node.queryON == True :
+                    node.update()
+        else:
+            self.heartbeat()
 
     def query(self):
-        for node in self.nodes:
-            self.nodes[node].reportDrivers() 
+        for node in self.poly.nodes():
+            node.reportDrivers() 
         
     def heartbeat(self):
         LOGGER.debug('heartbeat hb={}'.format(str(self.hb)))
@@ -132,7 +146,7 @@ class Controller(polyinterface.Controller):
         
     def install_profile(self):
         try:
-            self.poly.installprofile()
+            self.poly.updateProfile()
             LOGGER.info('Please restart the Admin Console for change to take effect')
         except Exception as ex:
             LOGGER.error('Error installing profile: %s', str(ex))
@@ -170,7 +184,7 @@ class Controller(polyinterface.Controller):
     commands = {'DISCOVERY' : runDiscover}
     drivers = [{'driver': 'ST', 'value': 0, 'uom': 2}]
     
-class AuroraNode(polyinterface.Node):
+class AuroraNode(udi_interface.Node):
 
     def __init__(self, controller, primary, address, name, ip, token):
         super(AuroraNode, self).__init__(controller, primary, address, name)
@@ -188,9 +202,6 @@ class AuroraNode(polyinterface.Node):
         self.__BuildProfile()
         self.query()
 
-    def start(self):
-        pass
-        
     def setOn(self, command):
         try:
             self.my_aurora.on = True
@@ -319,9 +330,9 @@ class AuroraNode(polyinterface.Node):
     
 if __name__ == "__main__":
     try:
-        polyglot = polyinterface.Interface('NanoLeafNodeServer')
+        polyglot = udi_interface.Interface([])
         polyglot.start()
-        control = Controller(polyglot)
-        control.runForever()
+        Controller(polyglot, 'controller', 'controller', 'NanoLeafNodeServer')
+        polyglot.runForever()
     except (KeyboardInterrupt, SystemExit):
         sys.exit(0)
