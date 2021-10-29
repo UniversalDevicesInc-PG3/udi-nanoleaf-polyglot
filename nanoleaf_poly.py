@@ -172,7 +172,7 @@ class Controller(udi_interface.Node):
             id = 1 
             lstAccess = list(zip(lstIp, lstToken))
             for access in lstAccess:
-                self.addNode(AuroraNode(self, self.address, 'aurora' + str(id) , 'Aurora' + str(id), access[0], access[1]))
+                self.poly.addNode(AuroraNode(self, self.address, 'aurora' + str(id) , 'Aurora' + str(id), access[0], access[1]))
                 id = id + 1 
         else:
             LOGGER.error('Unable to initialize the AuroraNode, list of host and token does not match.')
