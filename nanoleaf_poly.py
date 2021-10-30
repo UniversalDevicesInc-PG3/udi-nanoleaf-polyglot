@@ -192,6 +192,7 @@ class AuroraNode(udi_interface.Node):
         self.nano_ip = ip
         self.nano_token = token
         self.arrEffects = None
+        self.parent = controller.getNode(primary)
         
         try:
             self.my_aurora = Nanoleaf(host=self.nano_ip,token=self.nano_token)
