@@ -16,7 +16,7 @@
         {
             "title": "nanoleaf-poly: A Polyglot v2 interface to NanoLeaf Aurora",
             "author": "Jean-Francois Tremblay (AutomationGeek)",
-            "version": "3.0.0",
+            "version": "3.0.1",
             "date": "October 11, 2021",
             "source": "https://github.com/UniversalDevicesInc-PG3/udi-nanoleaf-polyglot",
             "license": "https://github.com/UniversalDevicesInc-PG3/udi-nanoleaf-polyglot/blob/master/LICENSE"

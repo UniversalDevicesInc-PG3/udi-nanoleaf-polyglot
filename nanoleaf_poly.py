@@ -46,12 +46,16 @@ class Controller(udi_interface.Node):
         self.CustomData = Custom(polyglot, 'customdata')
 
         polyglot.subscribe(polyglot.START, self.start, address)
+        polyglot.subscribe(polyglot.CUSTOMDATA, self.customDataHandler)
         polyglot.subscribe(polyglot.CUSTOMPARAMS, self.parameterHandler)
         polyglot.subscribe(polyglot.POLL, self.poll)
 
         polyglot.ready()
         polyglot.addNode(self)
         
+    def customDataHandler(self, data):
+        self.CustomData.load(data)
+
     def parameterHandler(self, params):
         self.poly.Notices.clear()
 
