@@ -60,7 +60,7 @@ class Controller(udi_interface.Node):
         self.poly.Notices.clear()
 
         # Get and set IP
-        if 'ip' in params and params['ip'] is not "":
+        if 'ip' in params and params['ip'] != "":
             self.nano_ip = params['ip']
             LOGGER.info('Custom IP address specified: {}'.format(self.nano_ip))
         else:
